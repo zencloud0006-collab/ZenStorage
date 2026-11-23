@@ -1,0 +1,788 @@
+ZenStorage — Premium Cloud Storage Dashboard Redesign
+
+1. Project Objective
+
+Transform the existing ZenStorage project into a premium, modern cloud storage platform with a complete dashboard experience inspired by Cloudflare, Linear, and Vercel.
+
+This is a UI/UX transformation of an existing, functional project, not a rebuild.
+
+The application already supports its storage features, APIs, authentication, user panel, and admin panel. Your task is to dramatically improve the visual design, layout, navigation, and user experience while preserving all existing functionality.
+
+Work directly inside the current project and implement the changes in the actual application.
+
+Do not simply generate a design concept, mockup, or separate demo page.
+
+Build the redesigned UI into the existing application.
+
+---
+
+2. Design Direction
+
+Create a professional cloud infrastructure dashboard with the following visual identity:
+
+- Primary aesthetic: Cloudflare-style functionality combined with Linear-style refinement.
+- Background: Deep charcoal and near-black surfaces.
+- Primary accent: Electric blue.
+- Secondary accents: Subtle violet and cyan.
+- Typography: Modern, highly readable sans-serif.
+- Layout: Structured dashboard with a persistent sidebar and contextual top navigation.
+- Components: Refined cards, tables, dialogs, dropdowns, charts, and interactive controls.
+- Visual density: Information-rich without feeling crowded.
+- Overall feeling: A serious cloud infrastructure product, not a generic AI-generated SaaS template.
+
+Use restrained gradients, subtle borders, carefully controlled shadows, and consistent spacing.
+
+Avoid excessive neon effects, giant rounded cards, oversized headings, unnecessary glassmorphism, and decorative elements that reduce readability.
+
+The design should look credible for a production cloud storage platform.
+
+Theme Support
+
+Implement a complete dark/light theme system.
+
+Dark theme:
+
+- Near-black application background.
+- Slightly lighter sidebar and card surfaces.
+- Subtle gray borders.
+- White primary text.
+- Muted gray secondary text.
+- Electric blue interactive elements.
+
+Light theme:
+
+- Clean off-white or light-gray backgrounds.
+- White cards and navigation surfaces.
+- Neutral borders.
+- Dark primary text.
+- Consistent blue accents.
+
+Both themes must be fully styled, not just a background color toggle.
+
+Preserve any existing theme preferences and persistence mechanisms.
+
+---
+
+3. Global Application Layout
+
+Create a consistent dashboard layout across the existing user and admin panels.
+
+A. Sidebar
+
+Implement a professional, collapsible sidebar.
+
+The sidebar should include:
+
+- ZenStorage logo and brand name.
+- Navigation grouped into logical sections.
+- Clear active-page highlighting.
+- Recognizable icons.
+- Hover states and tooltips when collapsed.
+- Expand/collapse functionality.
+- Responsive behavior for smaller screens.
+
+Use the existing routes and navigation destinations. Do not invent routes or duplicate pages.
+
+Organize the navigation according to the features already implemented.
+
+Potential user navigation groups:
+
+Workspace:
+
+- Overview
+- My Files
+- Buckets
+- Shared Files
+- Recent Activity
+
+Developer:
+
+- API Keys
+- API Documentation
+
+Insights:
+
+- Analytics
+- Activity Logs
+
+Account:
+
+- Settings
+- Billing and Plans, if supported by the existing application
+
+Only display sections that correspond to existing functionality.
+
+The administrator must retain a distinct administrative navigation experience with the existing administrative features.
+
+B. Top Navigation
+
+Build a refined top navigation bar containing the appropriate existing controls:
+
+- Current page title and breadcrumbs.
+- Global search.
+- Notification control, if supported.
+- Theme toggle.
+- Help or documentation access.
+- User avatar and account dropdown.
+
+Include a mobile menu button where appropriate.
+
+Use the existing account and notification systems. Do not create fake functionality.
+
+C. Main Content Area
+
+The content area should:
+
+- Use consistent page margins and spacing.
+- Support responsive layouts.
+- Maintain readable content widths.
+- Avoid unnecessary empty space.
+- Use consistent headings and section labels.
+- Support loading, empty, error, and populated states.
+
+Every page should feel like part of the same application.
+
+---
+
+4. User Dashboard Overview
+
+Transform the existing user landing page into a professional cloud storage overview.
+
+Welcome Section
+
+Display:
+
+- A contextual greeting.
+- A concise overview of the user's storage workspace.
+- Relevant quick actions.
+
+Keep the header compact and functional.
+
+Statistics Cards
+
+Create a responsive grid displaying the real data already available from the application:
+
+- Total storage used.
+- Total files.
+- Total buckets.
+- Bandwidth or transfer usage.
+- Remaining storage capacity, where applicable.
+
+Each card should include:
+
+- A clear label.
+- A prominent value.
+- A relevant icon.
+- Supporting contextual information.
+- A subtle visual indicator where useful.
+
+Use real application data. Do not hardcode statistics, fabricate growth percentages, or create fake activity.
+
+Storage Usage Visualization
+
+Add a polished storage utilization component featuring:
+
+- Used storage.
+- Available storage.
+- Usage percentage.
+- A progress indicator.
+- Storage limits where available.
+
+If the application exposes historical usage data, visualize it with a clean chart.
+
+Do not fabricate historical data to populate a chart.
+
+Quick Actions
+
+Create a visually consistent action area for existing operations, such as:
+
+- Upload Files.
+- Create Bucket.
+- Create Folder.
+- Generate or manage a share link.
+
+Only include actions that already exist in the application.
+
+Connect every button to its actual existing operation.
+
+Recent Files
+
+Display recently accessed or uploaded files in a refined table.
+
+Include the metadata already supported by the backend, such as:
+
+- File name and type.
+- Location or bucket.
+- Size.
+- Last modified date.
+- Available actions.
+
+Provide useful hover states and clear visual hierarchy.
+
+Recent Activity
+
+Display actual recent activity when available.
+
+Use a clean timeline or activity list with:
+
+- Action icon.
+- Description.
+- Timestamp.
+- Relevant file or resource reference.
+
+Do not create fake events or timestamps.
+
+---
+
+5. Advanced File Manager UI
+
+The file manager is one of the most important parts of ZenStorage.
+
+Upgrade it into a polished, cloud-native file management interface.
+
+File Explorer Layout
+
+Include:
+
+- Breadcrumb navigation.
+- Current folder or bucket title.
+- Search and filtering controls.
+- Grid/list view toggle.
+- Sorting options.
+- Upload button.
+- Folder creation button.
+- Selection and bulk-action toolbar.
+
+Reuse existing capabilities rather than implementing a second file management system.
+
+List View
+
+Design a professional file table with columns appropriate to the existing data:
+
+- Selection checkbox.
+- File or folder name.
+- Type.
+- Size.
+- Last modified.
+- Sharing status, if available.
+- Contextual actions.
+
+Use clear typography, compact rows, and subtle separators.
+
+Support:
+
+- Row hover states.
+- Selected-row highlighting.
+- File-type icons.
+- Sorting indicators.
+- Pagination or existing infinite scrolling.
+
+Grid View
+
+Create a modern file-card layout with:
+
+- File-type icon or existing thumbnail.
+- File name.
+- Relevant metadata.
+- Selection state.
+- Contextual menu.
+
+Ensure long file names wrap or truncate gracefully.
+
+Context Menus
+
+Use consistent dropdown menus for supported operations:
+
+- Open or preview.
+- Download.
+- Rename.
+- Move.
+- Copy link.
+- Share.
+- Delete.
+- View details.
+
+Only expose operations supported by the existing application and respect its existing permissions.
+
+Upload Experience
+
+Improve the existing upload interface with:
+
+- Drag-and-drop visual states.
+- Upload progress indicators.
+- File names and sizes.
+- Success and failure states.
+- Retry controls where supported.
+- Clear feedback for completed uploads.
+
+Do not replace or modify the underlying upload mechanism.
+
+File Preview and Details
+
+Improve the existing preview and file-details interfaces with:
+
+- Better spacing.
+- Clear metadata sections.
+- File-type-specific visual treatment.
+- A polished modal or side panel where appropriate.
+
+Preserve all existing preview functionality.
+
+---
+
+6. Buckets, Sharing, and Developer Features
+
+Upgrade the existing interfaces for buckets, shared files, API keys, and documentation.
+
+Buckets
+
+Create a clean bucket management page with:
+
+- Bucket overview.
+- Relevant storage statistics.
+- Bucket names and identifiers.
+- Creation dates.
+- Available actions.
+- Search and sorting where supported.
+
+Use cards or a table depending on the existing data and page structure.
+
+Shared Files
+
+Improve the shared files interface with:
+
+- File information.
+- Sharing status.
+- Link management.
+- Expiration details where available.
+- Clear copy-link interactions.
+- Existing revocation or permission controls.
+
+API Keys
+
+Design a developer-focused API key management interface.
+
+Include the existing capabilities for:
+
+- Listing API keys.
+- Creating keys.
+- Revoking keys.
+- Showing permissions or scopes.
+- Displaying creation dates.
+- Showing last-used information when available.
+
+Provide clear visual distinctions between sensitive and non-sensitive information.
+
+Preserve existing security protections. Never expose secret keys unnecessarily or weaken masking behavior.
+
+API Documentation
+
+If ZenStorage has an existing API documentation page, give it a professional developer-portal appearance.
+
+Use:
+
+- A clear documentation sidebar.
+- Readable endpoint sections.
+- Method badges.
+- Syntax-highlighted code blocks.
+- Copy-code buttons where appropriate.
+- Request and response examples already available in the project.
+
+Do not invent API endpoints or modify API behavior.
+
+---
+
+7. Complete Admin Dashboard Redesign
+
+The existing administrator panel must receive the same level of visual refinement as the user dashboard.
+
+Keep its existing routes, permissions, actions, and data sources.
+
+Admin Overview
+
+Build an administrative overview with real metrics where available:
+
+- Total registered users.
+- Total stored files.
+- Total storage consumption.
+- Bucket count.
+- Bandwidth usage.
+- System or service status, if already available.
+
+Use a consistent statistics-card design.
+
+Add charts only when actual historical or aggregate data exists.
+
+User Management
+
+Improve the existing user-management interface with:
+
+- Search.
+- Filters.
+- Sorting.
+- Pagination.
+- User status indicators.
+- Storage usage.
+- Role labels.
+- Contextual action menus.
+
+Preserve existing administrative operations and permission checks.
+
+Storage Administration
+
+Improve existing interfaces for:
+
+- Storage monitoring.
+- Bucket administration.
+- Usage limits.
+- Quotas.
+- Resource management.
+- Relevant storage configuration.
+
+Only include features that already exist.
+
+Activity and Logs
+
+Create a readable log interface with:
+
+- Clear timestamps.
+- Action categories.
+- Severity indicators where available.
+- Search and filters if supported.
+- Monospaced formatting for technical identifiers where appropriate.
+
+Do not fabricate operational logs or system health information.
+
+Admin Settings
+
+Refine the existing settings pages with:
+
+- Logical grouping.
+- Clear section headings.
+- Consistent forms.
+- Helpful field descriptions.
+- Validation feedback.
+- Save and cancel actions.
+
+Do not change existing administrative behavior.
+
+---
+
+8. Analytics and Charts
+
+Where existing analytics data is available, use clean and accessible visualizations for:
+
+- Storage usage over time.
+- Upload and download activity.
+- Bandwidth consumption.
+- File distribution.
+- User activity.
+- Other existing metrics.
+
+Charts should:
+
+- Match the current theme.
+- Use readable axes and labels.
+- Include useful tooltips.
+- Adapt to mobile layouts.
+- Avoid unnecessary visual effects.
+- Display proper empty states when data is unavailable.
+
+Reuse the project's existing chart library if one is installed.
+
+Do not add a large dependency just to decorate the dashboard.
+
+---
+
+9. Global Search and Command Palette
+
+Improve the existing search interface.
+
+If the project already supports global search, provide a polished search experience with:
+
+- A prominent search input.
+- Search suggestions.
+- Relevant file and resource results.
+- Keyboard navigation.
+- Clear empty states.
+- Loading feedback.
+
+If a command palette is appropriate, add a "Ctrl + K" shortcut and its Mac equivalent.
+
+The command palette should navigate to existing pages and trigger existing supported actions.
+
+Do not present decorative controls as functional features.
+
+If a capability is not currently supported and would require backend work, leave it out of scope.
+
+---
+
+10. UI Component System
+
+Create or refine a consistent set of reusable components.
+
+Include components such as:
+
+- Buttons.
+- Icon buttons.
+- Inputs.
+- Search fields.
+- Dropdowns.
+- Tooltips.
+- Badges.
+- Statistic cards.
+- Data tables.
+- Tabs.
+- Breadcrumbs.
+- Progress bars.
+- Modals.
+- Side panels.
+- Confirmation dialogs.
+- Toast notifications.
+- Skeleton loaders.
+- Empty states.
+- Error states.
+- Pagination controls.
+
+Use consistent:
+
+- Colors.
+- Spacing.
+- Typography.
+- Border radii.
+- Icon sizes.
+- Focus rings.
+- Hover states.
+- Disabled states.
+
+Use the existing component library where practical.
+
+Avoid building multiple inconsistent implementations of the same component.
+
+---
+
+11. Animations and Microinteractions
+
+Use subtle, purposeful animations.
+
+Examples:
+
+- Sidebar expansion.
+- Dropdown appearance.
+- Modal transitions.
+- Button feedback.
+- Upload progress.
+- Loading skeletons.
+- Toast notifications.
+- Theme switching.
+- File selection.
+
+Keep animations fast and restrained.
+
+Respect "prefers-reduced-motion".
+
+Do not add unnecessary animated backgrounds, continuous effects, or heavy animation dependencies.
+
+---
+
+12. Responsive Design
+
+The entire application must work across desktop, tablet, and mobile.
+
+Desktop
+
+- Persistent collapsible sidebar.
+- Full dashboard grids.
+- Efficient data tables.
+- Properly aligned top navigation.
+
+Tablet
+
+- Reduced spacing.
+- Responsive card grids.
+- Adapted sidebar.
+- Usable file management controls.
+
+Mobile
+
+- Compact navigation or a slide-out sidebar.
+- Single-column layouts where appropriate.
+- Responsive statistics cards.
+- Horizontally scrollable tables only when necessary.
+- Touch-friendly controls.
+- Properly sized dialogs and file previews.
+- No horizontal page overflow.
+
+Do not simply shrink the desktop design. Adapt the layout to each screen size.
+
+---
+
+13. Technical Constraints — Extremely Important
+
+This project already works. Preserve that functionality.
+
+Before changing any code:
+
+1. Inspect the existing project structure.
+2. Identify the actual framework, routes, layouts, and component system.
+3. Locate the existing user and admin panels.
+4. Identify existing CSS, styling conventions, and design tokens.
+5. Understand how authentication, authorization, and navigation are currently implemented.
+6. Identify the existing data-loading and interaction patterns.
+7. Determine which UI components can be reused.
+
+Do not assume the framework is Next.js simply because files end in ".js". Inspect "package.json" and the actual project structure.
+
+Strictly Preserve
+
+- All backend code.
+- API endpoints and request formats.
+- Database schemas and queries.
+- Authentication and session management.
+- Authorization and role checks.
+- Upload and download logic.
+- File-sharing behavior.
+- Bucket operations.
+- API key security.
+- Existing routes and URL structure.
+- Existing integrations.
+- Environment variables.
+- Existing business logic.
+
+This task is UI-only.
+
+Do not redesign the backend, replace existing APIs, migrate frameworks, rewrite the database layer, or rebuild working features.
+
+Do not remove existing functionality just because it is inconvenient to style.
+
+Integration Rules
+
+- Modify the actual existing pages and layouts.
+- Reuse current data and event handlers.
+- Preserve existing component props and interfaces unless a UI change genuinely requires an adjustment.
+- Avoid duplicating pages or creating a parallel demo dashboard.
+- Avoid replacing working components with mock implementations.
+- Do not hardcode fake dashboard metrics.
+- Do not add unnecessary dependencies.
+- Do not introduce a second styling framework.
+- Preserve existing mobile and desktop functionality.
+- Keep changes focused and incremental.
+
+If an existing feature cannot be understood safely, preserve its implementation and improve its presentation around it.
+
+---
+
+14. Implementation Workflow
+
+Execute the work in the following order.
+
+Phase 1: Audit
+
+Inspect the existing project and map all user-facing and admin-facing pages.
+
+Identify reusable components and the safest places to implement the new design.
+
+Phase 2: Design Foundation
+
+Establish consistent design tokens for:
+
+- Colors.
+- Typography.
+- Spacing.
+- Borders.
+- Shadows.
+- Radii.
+- Layout widths.
+- Responsive breakpoints.
+
+Implement the theme system and reusable UI primitives.
+
+Phase 3: Shared Dashboard Layout
+
+Redesign:
+
+- Sidebar.
+- Top navigation.
+- Breadcrumbs.
+- Page headers.
+- Global overlays.
+- Responsive navigation.
+
+Integrate these components into the existing application.
+
+Phase 4: User Dashboard
+
+Redesign the overview, file manager, buckets, sharing, API keys, analytics, settings, and other existing user-facing pages.
+
+Phase 5: Admin Dashboard
+
+Redesign the administrative overview, user management, storage management, logs, settings, and all other existing admin pages.
+
+Phase 6: Interaction Polish
+
+Improve:
+
+- Loading states.
+- Empty states.
+- Error messages.
+- Toast notifications.
+- Dialogs.
+- Dropdowns.
+- Forms.
+- Hover states.
+- Keyboard navigation.
+
+Phase 7: Verification
+
+Run the project's existing linting, type checking, and build commands where available.
+
+Fix UI-related errors introduced by your changes.
+
+Check that:
+
+- Existing routes still work.
+- User and admin access remain separate.
+- Navigation reaches the correct pages.
+- Existing actions still work.
+- Existing data renders correctly.
+- Upload and download interfaces remain functional.
+- Forms retain their existing submission behavior.
+- Dark and light themes both work.
+- Responsive layouts have no major overflow issues.
+- No mock data has accidentally replaced real application data.
+
+Do not claim the build or tests passed unless you actually ran them and verified the results.
+
+---
+
+15. Final Quality Standard
+
+The finished ZenStorage interface should feel like a professionally designed cloud storage SaaS platform.
+
+It should have:
+
+- A cohesive visual identity.
+- A clear dashboard hierarchy.
+- A polished file management experience.
+- A professional developer interface.
+- A distinct administrative experience.
+- Consistent light and dark themes.
+- Smooth, restrained interactions.
+- Responsive layouts.
+- Readable analytics and tables.
+- No fake data.
+- No broken existing functionality.
+
+Every existing page should feel intentionally designed, not merely decorated.
+
+Prioritize usability, consistency, visual quality, and preservation of the existing working application.
+
+Final Instruction
+
+Start by auditing the existing codebase, then implement the redesign directly in the existing project.
+
+Do not stop after producing a plan or describing what you would change.
+
+Do not ask me to manually recreate the pages.
+
+Make the actual UI changes, preserve the existing functionality, run the available checks, and provide a concise summary of what you changed and any remaining issues.

@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>ZenStorage - Animated Advertisement</title>
+  <meta name="description" content="Official animated advertisement and promo showcase for ZenStorage VPS SFTP & S3 Cloud Platform.">
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            zenamber: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706'
+            },
+            zencyan: {
+              400: '#38bdf8',
+              500: '#06b6d4',
+              600: '#0891b2'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Pitch-black Cyber Theme */
+    body {
+      background-color: #000000;
+      color: #f4f4f5;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient glowing grid background */
+    .cyber-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    /* Glowing borders and buttons */
+    .glow-amber {
+      box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.45);
+    }
+    .glow-amber-intense {
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.6);
+    }
+    .glow-cyan {
+      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.4);
+    }
+
+    /* Custom range scrubber */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 14px;
+      width: 14px;
+      border-radius: 50%;
+      background: #fbbf24;
+      cursor: pointer;
+      box-shadow: 0 0 10px #fbbf24;
+      margin-top: -4px;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+
+    /* Scanline overlay for cyber feel */
+    .scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-black text-slate-100 cyber-grid flex flex-col justify-between selection:bg-amber-500 selection:text-black">
+
+  <!-- ================= TOP CONTROLS & HEADER ================= -->
+  <header class="border-b border-white/10 bg-[#060609]/90 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Mode Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-400 to-amber-300 p-[1px] flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <div class="w-full h-full bg-black rounded-[11px] flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="header-brand-title" class="font-extrabold text-white text-base tracking-tight">ZenStorage</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+              Promo Engine
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-mono">Animated Video Advertisement & Banner Generator</p>
+        </div>
+      </div>
+
+      <!-- Aspect Ratio Toggles -->
+      <div class="flex items-center gap-1.5 bg-[#101014] p-1 rounded-xl border border-white/10 text-xs">
+        <button onclick="setAspectRatio('16:9')" id="btn-ar-16-9" class="px-3 py-1.5 rounded-lg font-medium transition-all bg-amber-500 text-black font-bold flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="tv" class="w-3.5 h-3.5"></i> 16:9 Landscape
+        </button>
+        <button onclick="setAspectRatio('9:16')" id="btn-ar-9-16" class="px-3 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i> 9:16 Reel
+        </button>
+        <button onclick="setAspectRatio('1:1')" id="btn-ar-1-1" class="px-3 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+          <i data-lucide="square" class="w-3.5 h-3.5"></i> 1:1 Square
+        </button>
+      </div>
+
+      <!-- DIRECT SAVE BUTTONS -->
+      <div class="flex items-center gap-2.5">
+        <!-- Direct Save Video Button -->
+        <button id="btn-save-video" onclick="saveAdvertisementVideo()" class="glow-amber px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black font-extrabold text-xs flex items-center gap-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg cursor-pointer">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Save Advertisement (Video)</span>
+        </button>
+
+        <!-- Direct Save Image Button -->
+        <button onclick="saveAdvertisementImage()" class="px-3.5 py-2 rounded-xl bg-[#141419] hover:bg-[#1f1f26] border border-white/15 text-white font-semibold text-xs flex items-center gap-1.5 transition-all hover:text-amber-300">
+          <i data-lucide="image" class="w-4 h-4 text-amber-400"></i>
+          <span>Save Poster (PNG)</span>
+        </button>
+
+        <!-- More Export Options dropdown / trigger -->
+        <button onclick="toggleExportMenu()" class="p-2 rounded-xl bg-[#141419] hover:bg-[#1f1f26] border border-white/10 text-slate-300 hover:text-white transition-all relative">
+          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= EXTRA EXPORT OPTIONS POPUP ================= -->
+  <div id="export-popup" class="hidden fixed top-16 right-8 z-50 w-72 rounded-2xl bg-[#0c0c10] border border-white/15 p-3 shadow-2xl space-y-1.5 backdrop-blur-xl">
+    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">Additional Save Options</div>
+    
+    <button onclick="saveStandaloneHtml(); toggleExportMenu();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 text-xs text-slate-200 flex items-center gap-2.5 transition-colors">
+      <i data-lucide="file-code-2" class="w-4 h-4 text-amber-400"></i>
+      <div>
+        <div class="font-semibold text-white">Save Standalone HTML Ad</div>
+        <div class="text-[10px] text-slate-400">Portable single-file ad bundle</div>
+      </div>
+    </button>
+
+    <button onclick="copyEmbedCode(); toggleExportMenu();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 text-xs text-slate-200 flex items-center gap-2.5 transition-colors">
+      <i data-lucide="code" class="w-4 h-4 text-cyan-400"></i>
+      <div>
+        <div class="font-semibold text-white">Copy Iframe Embed Code</div>
+        <div class="text-[10px] text-slate-400">Embed inside any website or blog</div>
+      </div>
+    </button>
+
+    <button onclick="copyShareLink(); toggleExportMenu();" class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 text-xs text-slate-200 flex items-center gap-2.5 transition-colors">
+      <i data-lucide="link-2" class="w-4 h-4 text-emerald-400"></i>
+      <div>
+        <div class="font-semibold text-white">Copy Direct Link</div>
+        <div class="text-[10px] text-slate-400">Share direct route URL</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- ================= MAIN STAGE AREA ================= -->
+  <main class="flex-1 flex flex-col items-center justify-center p-3 lg:p-6 w-full max-w-7xl mx-auto">
+
+    <!-- Screen stage wrapper -->
+    <div class="w-full flex flex-col items-center justify-center">
+      
+      <!-- AD CANVAS CONTAINER -->
+      <div id="ad-stage-box" class="relative group rounded-2xl border border-white/15 bg-black overflow-hidden shadow-2xl flex items-center justify-center transition-all duration-300 max-h-[72vh] w-full" style="aspect-ratio: 16/9; max-width: 1040px;">
+        
+        <!-- Native High-Resolution Canvas (Hidden resolution up to 1920x1080, scaled automatically to stage box) -->
+        <canvas id="ad-canvas" width="1920" height="1080" class="w-full h-full block object-contain"></canvas>
+
+        <!-- Scanline subtle aesthetic layer -->
+        <div class="absolute inset-0 scanlines pointer-events-none opacity-20"></div>
+
+        <!-- Watermark / Current Scene Indicator Pill -->
+        <div class="absolute top-4 left-4 z-20 flex items-center gap-2 pointer-events-none">
+          <div class="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[11px] font-mono text-amber-400 flex items-center gap-1.5 shadow-md">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="stage-scene-tag">SCENE 1: REVEAL</span>
+          </div>
+          <div id="fps-tag" class="px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/5 text-[10px] font-mono text-slate-400">
+            60 FPS
+          </div>
+        </div>
+
+        <!-- Live Direct Action Overlay on Hover -->
+        <div class="absolute bottom-4 right-4 z-20 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button onclick="saveAdvertisementImage()" class="px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black backdrop-blur-md border border-white/20 text-xs font-semibold text-white flex items-center gap-1.5 shadow-lg">
+            <i data-lucide="camera" class="w-3.5 h-3.5 text-amber-400"></i> Snapshot
+          </button>
+          <button onclick="toggleFullscreen()" class="p-1.5 rounded-lg bg-black/70 hover:bg-black backdrop-blur-md border border-white/20 text-white">
+            <i data-lucide="maximize" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Recording In Progress Banner (Shown during video save) -->
+        <div id="recording-overlay" class="hidden absolute inset-0 z-30 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mb-4">
+            <i data-lucide="film" class="w-8 h-8 text-amber-400 animate-bounce"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-1">Rendering Advertisement Video</h3>
+          <p id="recording-status-text" class="text-xs text-slate-400 mb-4 font-mono">Capturing frames at 60 FPS...</p>
+          <div class="w-64 h-2.5 bg-white/10 rounded-full overflow-hidden border border-white/10 mb-2">
+            <div id="recording-progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-amber-300 w-0 transition-all duration-100"></div>
+          </div>
+          <span id="recording-percent" class="text-xs font-mono font-bold text-amber-400">0%</span>
+        </div>
+
+      </div>
+
+      <!-- ================= PLAYER TIMELINE & PLAYBACK CONTROLS ================= -->
+      <div class="w-full max-w-[1040px] mt-4 p-4 rounded-2xl bg-[#0a0a0e] border border-white/10 backdrop-blur-md flex flex-col gap-3">
+        
+        <!-- Timeline Scrubber & Progress -->
+        <div class="flex items-center gap-3">
+          <span id="timeline-current-time" class="text-xs font-mono font-bold text-amber-400 w-12 text-right">00:00</span>
+          
+          <div class="relative flex-1 flex items-center">
+            <input type="range" id="timeline-slider" min="0" max="20" step="0.05" value="0" class="w-full h-2 cursor-pointer z-10" oninput="seekToTime(this.value)">
+            <!-- Progress Fill Bar -->
+            <div id="timeline-progress-fill" class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-amber-400 rounded-full pointer-events-none" style="width: 0%;"></div>
+          </div>
+
+          <span id="timeline-total-time" class="text-xs font-mono text-slate-400 w-12">00:20</span>
+        </div>
+
+        <!-- Lower Controls: Buttons, Scenes, Speed, Sound -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-white/5">
+          
+          <!-- Play / Pause / Restart -->
+          <div class="flex items-center gap-2">
+            <button onclick="togglePlayPause()" id="btn-play-pause" class="w-9 h-9 rounded-xl bg-white text-black hover:bg-slate-200 flex items-center justify-center transition-transform active:scale-95 shadow-md">
+              <i data-lucide="pause" id="icon-play-pause" class="w-4 h-4"></i>
+            </button>
+            <button onclick="restartAnimation()" title="Restart" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-white flex items-center justify-center border border-white/10 transition-colors">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+            <button onclick="toggleSound()" id="btn-sound" title="Toggle Synthesizer Sound FX" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center border border-white/10 transition-colors">
+              <i data-lucide="volume-x" id="icon-sound" class="w-4 h-4"></i>
+            </button>
+            <span id="sound-label" class="text-[11px] text-slate-500 font-mono hidden sm:inline">Audio Off</span>
+          </div>
+
+          <!-- Scene Selector Pills -->
+          <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 overflow-x-auto text-xs">
+            <button onclick="jumpToScene(1)" id="scene-tab-1" class="px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-colors">1. Brand</button>
+            <button onclick="jumpToScene(2)" id="scene-tab-2" class="px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-colors">2. SFTP</button>
+            <button onclick="jumpToScene(3)" id="scene-tab-3" class="px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-colors">3. S3 API</button>
+            <button onclick="jumpToScene(4)" id="scene-tab-4" class="px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-colors">4. Studio</button>
+            <button onclick="jumpToScene(5)" id="scene-tab-5" class="px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-colors">5. Deploy</button>
+          </div>
+
+          <!-- Playback Speed & Auto-Loop -->
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 text-xs text-slate-400 bg-white/5 px-2.5 py-1 rounded-xl border border-white/5">
+              <span>Speed:</span>
+              <button onclick="setSpeed(1)" id="btn-speed-1" class="font-bold text-amber-400">1x</button>
+              <button onclick="setSpeed(1.5)" id="btn-speed-1-5" class="hover:text-white">1.5x</button>
+              <button onclick="setSpeed(2)" id="btn-speed-2" class="hover:text-white">2x</button>
+            </div>
+            
+            <button onclick="toggleLoop()" id="btn-loop" title="Toggle Auto-loop" class="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1">
+              <i data-lucide="repeat" class="w-3 h-3"></i> Loop On
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= FEATURE HIGHLIGHTS & MARKETING SUMMARY ================= -->
+    <div class="w-full max-w-[1040px] mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+      
+      <!-- Card 1 -->
+      <div class="p-4 rounded-2xl bg-[#08080c] border border-white/10 hover:border-amber-500/30 transition-all">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-2.5">
+          <i data-lucide="zap" class="w-4 h-4"></i>
+        </div>
+        <h4 class="text-sm font-bold text-white mb-1">High-Speed SFTP Engine</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Concurrent multi-file SFTP transfers, streaming file previews, dual-pane tree navigator, and live transfer progress.
+        </p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="p-4 rounded-2xl bg-[#08080c] border border-white/10 hover:border-cyan-500/30 transition-all">
+        <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-2.5">
+          <i data-lucide="database" class="w-4 h-4"></i>
+        </div>
+        <h4 class="text-sm font-bold text-white mb-1">S3 & Vercel Blob Compatible</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          100% drop-in replacement API for AWS S3 and Vercel Blob. Seamless SDK compatibility with zero vendor lock-in.
+        </p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="p-4 rounded-2xl bg-[#08080c] border border-white/10 hover:border-emerald-500/30 transition-all">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-2.5">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+        </div>
+        <h4 class="text-sm font-bold text-white mb-1">Self-Hosted Sovereign Cloud</h4>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          One-click Linux VPS installer with pitch-black OLED UI, Ace code editor, 2FA OTP verification, and sub-user roles.
+        </p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-xl bg-[#121218] border border-white/20 text-white shadow-2xl flex items-center gap-2.5 text-xs font-medium">
+    <i data-lucide="check-circle" id="toast-icon" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-msg">Notification message</span>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-white/10 bg-[#040406] px-4 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span>ZenStorage Official Animated Promo</span>
+      </div>
+      <div class="font-mono text-[11px] text-slate-600">
+        Direct Save Enabled • Video MediaRecorder + High-Res PNG Canvas
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= JAVASCRIPT ANIMATION ENGINE & EXPORT SUITE ================= -->
+  <script>
+    // App State & Branding
+    const AdConfig = {
+      brandName: 'ZenStorage',
+      tagline: 'VPS SFTP Cloud & S3 Compatible Storage API',
+      siteUrl: window.location.origin,
+      duration: 20.0, // seconds total
+      fps: 60,
+      aspectRatio: '16:9', // '16:9', '9:16', '1:1'
+      canvasWidth: 1920,
+      canvasHeight: 1080,
+      isPlaying: true,
+      currentTime: 0.0,
+      speed: 1.0,
+      isLooping: true,
+      soundEnabled: false,
+      isRecording: false
+    };
+
+    // Canvas references
+    const canvas = document.getElementById('ad-canvas');
+    const ctx = canvas.getContext('2d');
+    let lastTimestamp = performance.now();
+    let animationFrameId = null;
+
+    // Web Audio Synthesizer Context
+    let audioCtx = null;
+
+    // Starfield & Particle Array
+    const stars = [];
+    for (let i = 0; i < 150; i++) {
+      stars.push({
+        x: Math.random() * 1920,
+        y: Math.random() * 1080,
+        size: Math.random() * 2.2 + 0.5,
+        speed: Math.random() * 0.8 + 0.2,
+        alpha: Math.random() * 0.7 + 0.3
+      });
+    }
+
+    // ================= DYNAMIC BRANDING FETCH =================
+    async function loadDynamicBranding() {
+      try {
+        const res = await fetch('/api/public/settings');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.appName || data.websiteTitle) {
+            AdConfig.brandName = data.appName || data.websiteTitle;
+            document.getElementById('header-brand-title').innerText = AdConfig.brandName;
+          }
+          if (data.appUrl) {
+            AdConfig.siteUrl = data.appUrl;
+          }
+        }
+      } catch (err) {
+        console.log('Using default branding: ZenStorage');
+      }
+    }
+
+    // ================= AUDIO SYNTHESIZER =================
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.2, gain = 0.1) {
+      if (!AdConfig.soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        g.gain.setValueAtTime(gain, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(g);
+        g.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      AdConfig.soundEnabled = !AdConfig.soundEnabled;
+      const btn = document.getElementById('btn-sound');
+      const icon = document.getElementById('icon-sound');
+      const label = document.getElementById('sound-label');
+
+      if (AdConfig.soundEnabled) {
+        initAudio();
+        btn.classList.add('text-amber-400', 'border-amber-500/30', 'bg-amber-500/10');
+        btn.classList.remove('text-slate-400');
+        icon.setAttribute('data-lucide', 'volume-2');
+        label.innerText = 'Audio On';
+        showToast('Synthesizer sound enabled');
+        playTone(440, 'triangle', 0.15, 0.15);
+      } else {
+        btn.classList.remove('text-amber-400', 'border-amber-500/30', 'bg-amber-500/10');
+        btn.classList.add('text-slate-400');
+        icon.setAttribute('data-lucide', 'volume-x');
+        label.innerText = 'Audio Off';
+        showToast('Sound muted');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // ================= ASPECT RATIO SWITCHING =================
+    function setAspectRatio(ratio) {
+      AdConfig.aspectRatio = ratio;
+      const box = document.getElementById('ad-stage-box');
+      
+      const b169 = document.getElementById('btn-ar-16-9');
+      const b916 = document.getElementById('btn-ar-9-16');
+      const b11 = document.getElementById('btn-ar-1-1');
+
+      [b169, b916, b11].forEach(b => {
+        b.className = 'px-3 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+      });
+
+      if (ratio === '16:9') {
+        AdConfig.canvasWidth = 1920;
+        AdConfig.canvasHeight = 1080;
+        box.style.aspectRatio = '16/9';
+        box.style.maxWidth = '1040px';
+        b169.className = 'px-3 py-1.5 rounded-lg font-medium transition-all bg-amber-500 text-black font-bold flex items-center gap-1.5 shadow-sm';
+      } else if (ratio === '9:16') {
+        AdConfig.canvasWidth = 1080;
+        AdConfig.canvasHeight = 1920;
+        box.style.aspectRatio = '9/16';
+        box.style.maxWidth = '420px';
+        b916.className = 'px-3 py-1.5 rounded-lg font-medium transition-all bg-amber-500 text-black font-bold flex items-center gap-1.5 shadow-sm';
+      } else if (ratio === '1:1') {
+        AdConfig.canvasWidth = 1080;
+        AdConfig.canvasHeight = 1080;
+        box.style.aspectRatio = '1/1';
+        box.style.maxWidth = '640px';
+        b11.className = 'px-3 py-1.5 rounded-lg font-medium transition-all bg-amber-500 text-black font-bold flex items-center gap-1.5 shadow-sm';
+      }
+
+      canvas.width = AdConfig.canvasWidth;
+      canvas.height = AdConfig.canvasHeight;
+      showToast(`Aspect ratio set to ${ratio} (${AdConfig.canvasWidth}x${AdConfig.canvasHeight})`);
+    }
+
+    // ================= TIMELINE & PLAYBACK =================
+    function togglePlayPause() {
+      AdConfig.isPlaying = !AdConfig.isPlaying;
+      updatePlayPauseButton();
+    }
+
+    function updatePlayPauseButton() {
+      const icon = document.getElementById('icon-play-pause');
+      if (AdConfig.isPlaying) {
+        icon.setAttribute('data-lucide', 'pause');
+      } else {
+        icon.setAttribute('data-lucide', 'play');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function restartAnimation() {
+      AdConfig.currentTime = 0;
+      AdConfig.isPlaying = true;
+      updatePlayPauseButton();
+      playTone(520, 'sine', 0.1, 0.1);
+    }
+
+    function seekToTime(val) {
+      AdConfig.currentTime = parseFloat(val);
+      updateTimelineUI();
+    }
+
+    function setSpeed(spd) {
+      AdConfig.speed = spd;
+      document.getElementById('btn-speed-1').className = spd === 1 ? 'font-bold text-amber-400' : 'hover:text-white';
+      document.getElementById('btn-speed-1-5').className = spd === 1.5 ? 'font-bold text-amber-400' : 'hover:text-white';
+      document.getElementById('btn-speed-2').className = spd === 2 ? 'font-bold text-amber-400' : 'hover:text-white';
+      showToast(`Playback speed set to ${spd}x`);
+    }
+
+    function toggleLoop() {
+      AdConfig.isLooping = !AdConfig.isLooping;
+      const btn = document.getElementById('btn-loop');
+      if (AdConfig.isLooping) {
+        btn.className = 'px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1';
+        btn.innerHTML = `<i data-lucide="repeat" class="w-3 h-3"></i> Loop On`;
+      } else {
+        btn.className = 'px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-xs flex items-center gap-1';
+        btn.innerHTML = `<i data-lucide="repeat" class="w-3 h-3"></i> Loop Off`;
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function jumpToScene(num) {
+      // Scene markers:
+      // 1: 0.0s
+      // 2: 4.0s
+      // 3: 8.0s
+      // 4: 12.0s
+      // 5: 16.0s
+      const times = [0, 0.0, 4.0, 8.0, 12.0, 16.0];
+      AdConfig.currentTime = times[num] || 0;
+      AdConfig.isPlaying = true;
+      updatePlayPauseButton();
+      playTone(400 + num * 60, 'sine', 0.15, 0.15);
+      showToast(`Jumped to Scene ${num}`);
+    }
+
+    function updateTimelineUI() {
+      const slider = document.getElementById('timeline-slider');
+      const fill = document.getElementById('timeline-progress-fill');
+      const timeTag = document.getElementById('timeline-current-time');
+      
+      slider.value = AdConfig.currentTime;
+      const pct = (AdConfig.currentTime / AdConfig.duration) * 100;
+      fill.style.width = `${pct}%`;
+
+      const m = Math.floor(AdConfig.currentTime / 60);
+      const s = Math.floor(AdConfig.currentTime % 60);
+      timeTag.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+      // Scene tag highlight
+      let sceneNum = 1;
+      let sceneName = 'BRAND REVEAL';
+      if (AdConfig.currentTime >= 16.0) {
+        sceneNum = 5;
+        sceneName = 'DEPLOY & CTA';
+      } else if (AdConfig.currentTime >= 12.0) {
+        sceneNum = 4;
+        sceneName = 'STUDIO & SECURITY';
+      } else if (AdConfig.currentTime >= 8.0) {
+        sceneNum = 3;
+        sceneName = 'S3 & VERCEL API';
+      } else if (AdConfig.currentTime >= 4.0) {
+        sceneNum = 2;
+        sceneName = 'SFTP SPEED';
+      }
+
+      document.getElementById('stage-scene-tag').innerText = `SCENE ${sceneNum}: ${sceneName}`;
+
+      // Highlight active scene tab
+      for (let i = 1; i <= 5; i++) {
+        const tab = document.getElementById(`scene-tab-${i}`);
+        if (i === sceneNum) {
+          tab.className = 'px-2.5 py-1 rounded-lg font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-colors';
+        } else {
+          tab.className = 'px-2.5 py-1 rounded-lg font-medium text-slate-400 hover:text-white transition-colors';
+        }
+      }
+    }
+
+    // ================= CANVAS RENDERING ENGINE (60 FPS) =================
+    function renderFrame(time) {
+      const W = canvas.width;
+      const H = canvas.height;
+      const t = time; // 0 to 20 seconds
+      const isPortrait = H > W;
+
+      // 1. Clear & Deep Cyber Background
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Starfield & Particles
+      ctx.save();
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        const curY = (s.y + t * s.speed * 40) % H;
+        const curX = (s.x + Math.sin(t + i) * 10) % W;
+        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(curX, curY, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // 3. Cyber Horizon & Perspective Grid
+      ctx.save();
+      const horizonY = H * 0.78;
+      const gradGrid = ctx.createLinearGradient(0, horizonY, 0, H);
+      gradGrid.addColorStop(0, 'rgba(245, 158, 11, 0.0)');
+      gradGrid.addColorStop(0.3, 'rgba(245, 158, 11, 0.08)');
+      gradGrid.addColorStop(1, 'rgba(245, 158, 11, 0.25)');
+      ctx.fillStyle = gradGrid;
+      ctx.fillRect(0, horizonY, W, H - horizonY);
+
+      // Grid Lines
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.15)';
+      ctx.lineWidth = 1.5;
+      const gridOffset = (t * 60) % 40;
+      for (let y = horizonY; y < H; y += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, y + gridOffset * ((y - horizonY) / (H - horizonY)));
+        ctx.lineTo(W, y + gridOffset * ((y - horizonY) / (H - horizonY)));
+        ctx.stroke();
+      }
+      for (let x = -W * 0.2; x <= W * 1.2; x += W / 14) {
+        ctx.beginPath();
+        ctx.moveTo(W / 2, horizonY);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Ambient Glowing Nebula Center
+      ctx.save();
+      const nebulaPulse = 0.8 + 0.2 * Math.sin(t * 2);
+      const gradNebula = ctx.createRadialGradient(W / 2, H * 0.45, 50, W / 2, H * 0.45, W * 0.5);
+      gradNebula.addColorStop(0, `rgba(245, 158, 11, ${0.15 * nebulaPulse})`);
+      gradNebula.addColorStop(0.4, `rgba(6, 182, 212, ${0.08 * nebulaPulse})`);
+      gradNebula.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = gradNebula;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+
+      // Top Header Overlay Badge on Video (Permanent subtle branding)
+      renderTopWatermark(W, H, t);
+
+      // ================= SCENE SELECTION & CHOREOGRAPHY =================
+      if (t < 4.0) {
+        renderScene1_Reveal(W, H, t, isPortrait);
+      } else if (t < 8.0) {
+        renderScene2_SFTP(W, H, t - 4.0, isPortrait);
+      } else if (t < 12.0) {
+        renderScene3_S3API(W, H, t - 8.0, isPortrait);
+      } else if (t < 16.0) {
+        renderScene4_Studio(W, H, t - 12.0, isPortrait);
+      } else {
+        renderScene5_DeployCTA(W, H, t - 16.0, isPortrait);
+      }
+
+      // Vignette border
+      renderVignette(W, H);
+    }
+
+    // Top Watermark
+    function renderTopWatermark(W, H, t) {
+      ctx.save();
+      ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.textAlign = 'right';
+      ctx.fillText(AdConfig.brandName, W - 60, 60);
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(W - 40, 52, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Vignette
+    function renderVignette(W, H) {
+      ctx.save();
+      const grad = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.5, W / 2, H / 2, Math.max(W, H) * 0.75);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    // ================= SCENE 1: REVEAL =================
+    function renderScene1_Reveal(W, H, st, isPortrait) {
+      // st from 0.0 to 4.0
+      ctx.save();
+      const alpha = Math.min(st * 1.5, 1.0) * (st > 3.6 ? (4.0 - st) * 2.5 : 1.0);
+      ctx.globalAlpha = Math.max(0, alpha);
+
+      // Rotating Hologram 3D Cube
+      draw3DCyberCube(W / 2, isPortrait ? H * 0.35 : H * 0.38, st * 1.2, isPortrait ? 130 : 160);
+
+      // Main Brand Typography
+      const titleY = isPortrait ? H * 0.55 : H * 0.62;
+      ctx.textAlign = 'center';
+      
+      // Glow behind text
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 40;
+      ctx.font = `900 ${isPortrait ? '80px' : '110px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(AdConfig.brandName.toUpperCase(), W / 2, titleY);
+      ctx.shadowBlur = 0;
+
+      // Subtitle Tagline
+      ctx.font = `700 ${isPortrait ? '26px' : '34px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText("NEXT-GEN VPS SFTP & S3 STORAGE CLOUD", W / 2, titleY + (isPortrait ? 55 : 65));
+
+      // Badges
+      const badgeY = titleY + (isPortrait ? 120 : 135);
+      drawPillBadge(W / 2 - (isPortrait ? 0 : 260), isPortrait ? badgeY - 30 : badgeY, "⚡ 10 Gbps SFTP Engine", "#06b6d4");
+      drawPillBadge(W / 2, badgeY, "🗄️ AWS S3 & Vercel Blob Compatible", "#fbbf24");
+      drawPillBadge(W / 2 + (isPortrait ? 0 : 270), isPortrait ? badgeY + 40 : badgeY, "🛡️ Sovereign Pitch-Black UI", "#10b981");
+
+      ctx.restore();
+    }
+
+    // Helper: 3D Wireframe Cube
+    function draw3DCyberCube(cx, cy, rot, size) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      const radY = rot;
+      const radX = Math.sin(rot * 0.5) * 0.4;
+
+      const vertices = [
+        [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+        [-1, -1, 1],  [1, -1, 1],  [1, 1, 1],  [-1, 1, 1]
+      ];
+
+      const proj = vertices.map(v => {
+        let x = v[0] * size;
+        let y = v[1] * size;
+        let z = v[2] * size;
+
+        // Rotate Y
+        let x1 = x * Math.cos(radY) - z * Math.sin(radY);
+        let z1 = x * Math.sin(radY) + z * Math.cos(radY);
+
+        // Rotate X
+        let y2 = y * Math.cos(radX) - z1 * Math.sin(radX);
+        let z2 = y * Math.sin(radX) + z1 * Math.cos(radX);
+
+        const fov = 600;
+        const scale = fov / (fov + z2);
+        return [x1 * scale, y2 * scale];
+      });
+
+      const edges = [
+        [0,1], [1,2], [2,3], [3,0],
+        [4,5], [5,6], [6,7], [7,4],
+        [0,4], [1,5], [2,6], [3,7]
+      ];
+
+      // Draw Glowing Cube Edges
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 15;
+
+      edges.forEach(e => {
+        ctx.beginPath();
+        ctx.moveTo(proj[e[0]][0], proj[e[0]][1]);
+        ctx.lineTo(proj[e[1]][0], proj[e[1]][1]);
+        ctx.stroke();
+      });
+
+      // Internal glowing orb
+      ctx.fillStyle = '#06b6d4';
+      ctx.shadowColor = '#06b6d4';
+      ctx.shadowBlur = 25;
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Helper: Pill Badge
+    function drawPillBadge(x, y, text, color) {
+      ctx.save();
+      ctx.font = '700 18px "JetBrains Mono", monospace';
+      const textWidth = ctx.measureText(text).width;
+      const padX = 20;
+      const padY = 10;
+      const w = textWidth + padX * 2;
+      const h = 38;
+
+      ctx.translate(x - w / 2, y - h / 2);
+      ctx.fillStyle = 'rgba(15, 15, 20, 0.85)';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+
+      roundRect(ctx, 0, 0, w, h, 19);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, w / 2, h / 2);
+
+      ctx.restore();
+    }
+
+    // ================= SCENE 2: SFTP SPEED & FILE TRANSFERS =================
+    function renderScene2_SFTP(W, H, st, isPortrait) {
+      // st from 0.0 to 4.0
+      ctx.save();
+      const alpha = Math.min(st * 2, 1.0) * (st > 3.6 ? (4.0 - st) * 2.5 : 1.0);
+      ctx.globalAlpha = Math.max(0, alpha);
+
+      const midY = isPortrait ? H * 0.45 : H * 0.48;
+
+      // Section Title
+      ctx.textAlign = 'center';
+      ctx.font = `800 ${isPortrait ? '42px' : '58px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#06b6d4';
+      ctx.shadowBlur = 25;
+      ctx.fillText("ULTRA-FAST SFTP ENGINE", W / 2, isPortrait ? H * 0.18 : H * 0.2);
+      ctx.shadowBlur = 0;
+
+      ctx.font = `600 ${isPortrait ? '20px' : '26px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText("Concurrent multi-threaded file uploads & instant directory indexing", W / 2, (isPortrait ? H * 0.18 : H * 0.2) + 42);
+
+      // Mock Terminal / Dashboard Card
+      const cardW = isPortrait ? W * 0.88 : Math.min(W * 0.75, 1100);
+      const cardH = isPortrait ? 580 : 440;
+      const cardX = (W - cardW) / 2;
+      const cardY = midY - (isPortrait ? 180 : 160);
+
+      // Card Background
+      ctx.fillStyle = 'rgba(10, 10, 16, 0.9)';
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(6, 182, 212, 0.3)';
+      ctx.shadowBlur = 30;
+      roundRect(ctx, cardX, cardY, cardW, cardH, 20);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Card Window Header
+      ctx.fillStyle = '#14141e';
+      roundRect(ctx, cardX, cardY, cardW, 44, 20);
+      ctx.fill();
+      // Dots
+      drawMacDots(cardX + 25, cardY + 22);
+
+      ctx.font = '600 15px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#a1a1aa';
+      ctx.textAlign = 'left';
+      ctx.fillText("sftp://vps.zenstorage.io:22 (Connected - AES-256-GCM)", cardX + 75, cardY + 28);
+
+      // Live Telemetry Speed Meter
+      const speedMb = (118.4 + Math.sin(st * 8) * 14.2).toFixed(1);
+      ctx.font = '700 28px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#06b6d4';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${speedMb} MB/s ⚡`, cardX + cardW - 30, cardY + 85);
+
+      // Transfer File Queue 1
+      const progress1 = Math.min(st / 2.8, 1.0);
+      drawTransferRow(cardX + 30, cardY + 110, cardW - 60, "neural_network_weights_v4.safetensors", "2.4 GB", progress1, "#06b6d4");
+
+      // Transfer File Queue 2
+      const progress2 = Math.min(st / 3.4, 0.88);
+      drawTransferRow(cardX + 30, cardY + 200, cardW - 60, "production_database_backup.sqlite.gz", "1.2 GB", progress2, "#fbbf24");
+
+      // Transfer File Queue 3
+      const progress3 = Math.min(st / 1.5, 1.0);
+      drawTransferRow(cardX + 30, cardY + 290, cardW - 60, "4k_cinematic_footage_hdr.mp4", "4.8 GB", progress3, "#10b981");
+
+      ctx.restore();
+    }
+
+    function drawMacDots(x, y) {
+      ctx.save();
+      const colors = ['#ef4444', '#f59e0b', '#10b981'];
+      colors.forEach((c, idx) => {
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(x + idx * 18, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawTransferRow(x, y, w, filename, size, pct, barColor) {
+      ctx.save();
+      ctx.font = '600 18px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.fillText(filename, x, y + 10);
+
+      ctx.font = '500 16px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#94a3b8';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${(pct * 100).toFixed(0)}% (${size})`, x + w, y + 10);
+
+      // Bar Background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      roundRect(ctx, x, y + 25, w, 14, 7);
+      ctx.fill();
+
+      // Progress Fill
+      ctx.fillStyle = barColor;
+      ctx.shadowColor = barColor;
+      ctx.shadowBlur = 10;
+      roundRect(ctx, x, y + 25, Math.max(w * pct, 14), 14, 7);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ================= SCENE 3: S3 & VERCEL BLOB COMPATIBLE API =================
+    function renderScene3_S3API(W, H, st, isPortrait) {
+      // st from 0.0 to 4.0
+      ctx.save();
+      const alpha = Math.min(st * 2, 1.0) * (st > 3.6 ? (4.0 - st) * 2.5 : 1.0);
+      ctx.globalAlpha = Math.max(0, alpha);
+
+      // Headline
+      ctx.textAlign = 'center';
+      ctx.font = `800 ${isPortrait ? '40px' : '56px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 25;
+      ctx.fillText("AWS S3 & VERCEL BLOB API", W / 2, isPortrait ? H * 0.18 : H * 0.2);
+      ctx.shadowBlur = 0;
+
+      ctx.font = `600 ${isPortrait ? '19px' : '26px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText("Zero vendor lock-in. 100% drop-in API replacement.", W / 2, (isPortrait ? H * 0.18 : H * 0.2) + 42);
+
+      // Code Box Mockup
+      const boxW = isPortrait ? W * 0.88 : Math.min(W * 0.75, 1050);
+      const boxH = isPortrait ? 560 : 420;
+      const boxX = (W - boxW) / 2;
+      const boxY = (isPortrait ? H * 0.44 : H * 0.48) - 140;
+
+      ctx.fillStyle = '#09090f';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.35)';
+      ctx.shadowBlur = 25;
+      roundRect(ctx, boxX, boxY, boxW, boxH, 20);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Header
+      ctx.fillStyle = '#14141c';
+      roundRect(ctx, boxX, boxY, boxW, 44, 20);
+      ctx.fill();
+      drawMacDots(boxX + 25, boxY + 22);
+
+      ctx.font = '600 15px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'left';
+      ctx.fillText("storage-client.ts — AWS S3 SDK Compatible", boxX + 80, boxY + 28);
+
+      // Code typing lines
+      const codeLines = [
+        { text: "import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';", color: '#a855f7' },
+        { text: "", color: '#fff' },
+        { text: "// Connect directly to your sovereign ZenStorage VPS node", color: '#64748b' },
+        { text: "const s3 = new S3Client({", color: '#38bdf8' },
+        { text: "  endpoint: 'https://storage.zen.dev/api/s3',", color: '#fbbf24' },
+        { text: "  credentials: { accessKeyId: 'ZS_AK_LIVE', secretAccessKey: '••••••' },", color: '#34d399' },
+        { text: "  region: 'auto', forcePathStyle: true", color: '#38bdf8' },
+        { text: "});", color: '#38bdf8' },
+        { text: "", color: '#fff' },
+        { text: "await s3.send(new PutObjectCommand({ Bucket: 'production', Key: 'file.bin' }));", color: '#10b981' },
+        { text: "// ⚡ 200 OK — Saved to self-hosted storage in 18ms", color: '#f59e0b' }
+      ];
+
+      const visibleLineCount = Math.min(Math.floor(st * 4) + 3, codeLines.length);
+      const startLineY = boxY + 80;
+      ctx.font = `600 ${isPortrait ? '15px' : '19px'} "JetBrains Mono", monospace`;
+
+      for (let i = 0; i < visibleLineCount; i++) {
+        ctx.fillStyle = codeLines[i].color;
+        ctx.fillText(codeLines[i].text, boxX + 35, startLineY + i * (isPortrait ? 28 : 32));
+      }
+
+      ctx.restore();
+    }
+
+    // ================= SCENE 4: INBUILT MEDIA STUDIO & SECURITY =================
+    function renderScene4_Studio(W, H, st, isPortrait) {
+      ctx.save();
+      const alpha = Math.min(st * 2, 1.0) * (st > 3.6 ? (4.0 - st) * 2.5 : 1.0);
+      ctx.globalAlpha = Math.max(0, alpha);
+
+      ctx.textAlign = 'center';
+      ctx.font = `800 ${isPortrait ? '40px' : '56px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#10b981';
+      ctx.shadowBlur = 25;
+      ctx.fillText("INBUILT STUDIO & 2FA SECURITY", W / 2, isPortrait ? H * 0.18 : H * 0.2);
+      ctx.shadowBlur = 0;
+
+      ctx.font = `600 ${isPortrait ? '19px' : '26px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#34d399';
+      ctx.fillText("4K Video Streaming, Code Editor & Zero-Trust OTP Protection", W / 2, (isPortrait ? H * 0.18 : H * 0.2) + 42);
+
+      // Two side-by-side or stacked preview cards
+      const cardW = isPortrait ? W * 0.88 : (W * 0.75 - 30) / 2;
+      const cardH = isPortrait ? 260 : 380;
+      const cardY = isPortrait ? H * 0.32 : H * 0.35;
+
+      // Card 1: Media Studio
+      const card1X = isPortrait ? (W - cardW) / 2 : W / 2 - cardW - 15;
+      drawStudioFeatureCard(card1X, cardY, cardW, cardH, "🎬 Inbuilt 4K Media Player", "Instant range streaming for MP4, WebM, MKV with zero transcode lag and subtitle support.", "#06b6d4", "▶ 01:24:45 / 02:30:00 (4K UHD 60FPS)");
+
+      // Card 2: Security & OTP Shield
+      const card2X = isPortrait ? (W - cardW) / 2 : W / 2 + 15;
+      const card2Y = isPortrait ? cardY + 280 : cardY;
+      drawStudioFeatureCard(card2X, card2Y, cardW, cardH, "🛡️ Enterprise 2FA & Roles", "Email OTP security codes with dark ambient templates, granular sub-user quotas, and IP isolation.", "#fbbf24", "VERIFIED: 2FA Security Token Accepted");
+
+      ctx.restore();
+    }
+
+    function drawStudioFeatureCard(x, y, w, h, title, desc, color, footer) {
+      ctx.save();
+      ctx.fillStyle = '#0a0a10';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 20;
+      roundRect(ctx, x, y, w, h, 18);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Header
+      ctx.fillStyle = '#12121a';
+      roundRect(ctx, x, y, w, 44, 18);
+      ctx.fill();
+      drawMacDots(x + 20, y + 22);
+
+      ctx.font = '700 18px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.fillText(title, x + 70, y + 28);
+
+      // Body description
+      ctx.font = '500 16px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      wrapText(ctx, desc, x + 25, y + 80, w - 50, 24);
+
+      // Footer
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      roundRect(ctx, x + 20, y + h - 55, w - 40, 36, 10);
+      ctx.fill();
+
+      ctx.font = '600 14px "JetBrains Mono", monospace';
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(footer, x + w / 2, y + h - 32);
+
+      ctx.restore();
+    }
+
+    // ================= SCENE 5: CALL TO ACTION =================
+    function renderScene5_DeployCTA(W, H, st, isPortrait) {
+      // st from 0.0 to 4.0
+      ctx.save();
+      const alpha = Math.min(st * 2, 1.0);
+      ctx.globalAlpha = Math.max(0, alpha);
+
+      // Big Glowing Emblem
+      const logoY = isPortrait ? H * 0.28 : H * 0.32;
+      ctx.save();
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 50;
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(W / 2, logoY, isPortrait ? 55 : 70, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Icon inside emblem
+      ctx.fillStyle = '#000000';
+      ctx.font = `900 ${isPortrait ? '48px' : '62px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText("⚡", W / 2, logoY + 4);
+      ctx.restore();
+
+      // Bold Brand Name
+      ctx.textAlign = 'center';
+      ctx.font = `900 ${isPortrait ? '65px' : '90px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#f59e0b';
+      ctx.shadowBlur = 35;
+      ctx.fillText(AdConfig.brandName.toUpperCase(), W / 2, logoY + (isPortrait ? 95 : 115));
+      ctx.shadowBlur = 0;
+
+      // Catchy Callout
+      ctx.font = `800 ${isPortrait ? '24px' : '34px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText("TAKE FULL CONTROL OF YOUR CLOUD STORAGE", W / 2, logoY + (isPortrait ? 150 : 180));
+
+      // 1-Click Install Command Line
+      const cmdW = isPortrait ? W * 0.9 : Math.min(W * 0.65, 840);
+      const cmdH = 68;
+      const cmdX = (W - cmdW) / 2;
+      const cmdY = logoY + (isPortrait ? 200 : 240);
+
+      ctx.fillStyle = '#08080c';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.4)';
+      ctx.shadowBlur = 25;
+      roundRect(ctx, cmdX, cmdY, cmdW, cmdH, 18);
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.font = `700 ${isPortrait ? '16px' : '22px'} "JetBrains Mono", monospace`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText("curl -fsSL https://zenstorage.io/install.sh | bash", W / 2, cmdY + cmdH / 2);
+
+      // Website URL & Deploy Badge
+      ctx.font = `700 ${isPortrait ? '20px' : '26px'} "Plus Jakarta Sans", sans-serif`;
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText("storage.zendevelopment.in", W / 2, cmdY + cmdH + (isPortrait ? 40 : 50));
+
+      ctx.font = `600 ${isPortrait ? '14px' : '17px'} "JetBrains Mono", monospace`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText("Open-Source • Self-Hosted • 1-Click Installation", W / 2, cmdY + cmdH + (isPortrait ? 75 : 85));
+
+      ctx.restore();
+    }
+
+    // Helper: Round Rectangle
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    // Helper: Wrap Text
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    // ================= MAIN ANIMATION LOOP =================
+    function animLoop(timestamp) {
+      const delta = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      if (AdConfig.isPlaying && !AdConfig.isRecording) {
+        AdConfig.currentTime += delta * AdConfig.speed;
+
+        // Check if loop ended
+        if (AdConfig.currentTime >= AdConfig.duration) {
+          if (AdConfig.isLooping) {
+            AdConfig.currentTime = 0;
+            playTone(380, 'sine', 0.1, 0.1);
+          } else {
+            AdConfig.currentTime = AdConfig.duration;
+            AdConfig.isPlaying = false;
+            updatePlayPauseButton();
+          }
+        }
+        updateTimelineUI();
+      }
+
+      renderFrame(AdConfig.currentTime);
+      animationFrameId = requestAnimationFrame(animLoop);
+    }
+
+    // ================= DIRECT SAVE FUNCTIONS =================
+
+    // 1. DIRECT SAVE HIGH-RES IMAGE (PNG)
+    function saveAdvertisementImage() {
+      try {
+        // Ensure current frame is rendered in high-res
+        renderFrame(AdConfig.currentTime);
+
+        const dataUrl = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.download = `${AdConfig.brandName.toLowerCase()}-advertisement-${AdConfig.aspectRatio.replace(':', 'x')}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        playTone(600, 'triangle', 0.2, 0.2);
+        showToast('High-Resolution Advertisement Poster saved!');
+      } catch (err) {
+        console.error('Failed to save image:', err);
+        showToast('Error saving poster image.');
+      }
+    }
+
+    // 2. DIRECT SAVE VIDEO (WEBM / MP4) VIA MediaRecorder
+    async function saveAdvertisementVideo() {
+      if (AdConfig.isRecording) return;
+
+      const overlay = document.getElementById('recording-overlay');
+      const progressBar = document.getElementById('recording-progress-bar');
+      const percentText = document.getElementById('recording-percent');
+      const statusText = document.getElementById('recording-status-text');
+
+      overlay.classList.remove('hidden');
+      AdConfig.isRecording = true;
+      AdConfig.isPlaying = false;
+
+      // Select supported mimeType
+      const mimeTypes = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm',
+        'video/mp4'
+      ];
+      let selectedMime = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || 'video/webm';
+
+      try {
+        const stream = canvas.captureStream(60);
+        const recorder = new MediaRecorder(stream, {
+          mimeType: selectedMime,
+          videoBitsPerSecond: 8000000 // 8 Mbps high bitrate
+        });
+
+        const recordedChunks = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+
+        recorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: selectedMime });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          const ext = selectedMime.includes('mp4') ? 'mp4' : 'webm';
+          link.download = `${AdConfig.brandName.toLowerCase()}-advertisement-promo.${ext}`;
+          link.href = url;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          overlay.classList.add('hidden');
+          AdConfig.isRecording = false;
+          AdConfig.isPlaying = true;
+          updatePlayPauseButton();
+
+          playTone(880, 'sine', 0.3, 0.2);
+          showToast(`Advertisement Video saved successfully (${ext.toUpperCase()})!`);
+        };
+
+        recorder.start();
+        statusText.innerText = `Recording 60 FPS full advertisement cycle (${selectedMime})...`;
+
+        // Render entire advertisement frame-by-frame smoothly
+        const totalDuration = AdConfig.duration;
+        const totalFrames = totalDuration * 30; // 30 FPS for recording
+        const timeStep = totalDuration / totalFrames;
+        let curFrame = 0;
+
+        function recordNextFrame() {
+          if (curFrame > totalFrames) {
+            statusText.innerText = 'Finalizing and packaging video file...';
+            recorder.stop();
+            return;
+          }
+
+          const recordTime = curFrame * timeStep;
+          renderFrame(recordTime);
+
+          const pct = Math.min(Math.round((curFrame / totalFrames) * 100), 100);
+          progressBar.style.width = `${pct}%`;
+          percentText.innerText = `${pct}%`;
+
+          curFrame++;
+          // Allow small timeout so stream captures frame and UI updates
+          setTimeout(recordNextFrame, 20);
+        }
+
+        recordNextFrame();
+
+      } catch (err) {
+        console.error('Recording error:', err);
+        overlay.classList.add('hidden');
+        AdConfig.isRecording = false;
+        AdConfig.isPlaying = true;
+        showToast('Error recording video: ' + err.message);
+      }
+    }
+
+    // 3. SAVE STANDALONE OFFLINE HTML AD
+    function saveStandaloneHtml() {
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${AdConfig.brandName} - Standalone Advertisement</title>
+  <style>
+    body { margin:0; background:#000; overflow:hidden; display:flex; align-items:center; justify-content:center; height:100vh; }
+    canvas { width:100%; height:100%; max-width:1200px; aspect-ratio:16/9; object-contain:contain; }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <script>
+    // Self-contained embedded player
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let t = 0;
+    function loop() {
+      t = (t + 0.016) % 20;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 1920, 1080);
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = '900 110px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("${AdConfig.brandName.toUpperCase()}", 960, 500);
+      ctx.font = '700 36px sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.fillText("${AdConfig.tagline}", 960, 600);
+      requestAnimationFrame(loop);
+    }
+    loop();
+  <\/script>
+</body>
+</html>`;
+
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `${AdConfig.brandName.toLowerCase()}-ad-bundle.html`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Standalone HTML Ad Package saved!');
+    }
+
+    // 4. COPY IFRAME EMBED CODE
+    function copyEmbedCode() {
+      const embedCode = `<iframe src="${window.location.origin}/advertisement" width="100%" height="600" frameborder="0" allowfullscreen style="border:1px solid #1f1f26; border-radius:18px;"></iframe>`;
+      navigator.clipboard.writeText(embedCode).then(() => {
+        showToast('Iframe embed code copied to clipboard!');
+      }).catch(() => {
+        showToast('Embed code: ' + embedCode);
+      });
+    }
+
+    // 5. COPY SHARE LINK
+    function copyShareLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('Direct advertisement link copied!');
+      });
+    }
+
+    function toggleExportMenu() {
+      const menu = document.getElementById('export-popup');
+      menu.classList.toggle('hidden');
+    }
+
+    function toggleFullscreen() {
+      const stage = document.getElementById('ad-stage-box');
+      if (!document.fullscreenElement) {
+        stage.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // Toast utility
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-msg');
+      text.innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      clearTimeout(window.__toastTimeout);
+      window.__toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3000);
+    }
+
+    // Click outside export menu
+    window.addEventListener('click', (e) => {
+      const popup = document.getElementById('export-popup');
+      if (!popup.classList.contains('hidden') && !e.target.closest('#export-popup') && !e.target.closest('button[onclick="toggleExportMenu()"]')) {
+        popup.classList.add('hidden');
+      }
+    });
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDynamicBranding();
+      if (window.lucide) lucide.createIcons();
+      setAspectRatio('16:9');
+      lastTimestamp = performance.now();
+      animationFrameId = requestAnimationFrame(animLoop);
+    });
+  </script>
+</body>
+</html>

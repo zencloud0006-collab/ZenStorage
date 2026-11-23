@@ -1,0 +1,1025 @@
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
+
+const dbPath = path.resolve(__dirname, '../../', process.env.DB_FILE || 'data.sqlite');
+const db = new sqlite3.Database(dbPath);
+
+// WAL mode lets readers (e.g. an incoming file download request) proceed
+// without waiting on writers (e.g. the once-a-second background download-job
+// progress updates). Without this, the default rollback-journal mode takes an
+// exclusive lock on every write and can make unrelated requests - including
+// "Download" clicks - stall behind whatever write happens to be in flight.
+// busy_timeout makes SQLite retry briefly instead of failing immediately with
+// SQLITE_BUSY when a write does collide with another write.
+db.run('PRAGMA journal_mode = WAL;');
+db.run('PRAGMA busy_timeout = 5000;');
+db.run('PRAGMA synchronous = NORMAL;');
+
+// Helper wrapper for async query execution
+function runQuery(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) return reject(err);
+      resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+}
+
+function getRow(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+}
+
+function getAll(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+}
+
+async function ensureColumn(table, column, definition) {
+  const columns = await getAll(`PRAGMA table_info(${table});`);
+  if (!columns.some(c => c.name === column)) {
+    await runQuery(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition};`);
+  }
+}
+
+function initDatabase() {
+  return new Promise((resolve, reject) => {
+    db.serialize(async () => {
+      try {
+        // Enable Foreign Keys
+        db.run('PRAGMA foreign_keys = ON;');
+
+        // Users table
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'user',
+            storage_quota_bytes INTEGER NOT NULL DEFAULT 10737418240,
+            used_storage_bytes INTEGER NOT NULL DEFAULT 0,
+            monthly_bandwidth_limit_bytes INTEGER NOT NULL DEFAULT 16106127360,
+            used_bandwidth_bytes INTEGER NOT NULL DEFAULT 0,
+            monthly_api_requests_limit INTEGER NOT NULL DEFAULT 100000,
+            used_api_requests INTEGER NOT NULL DEFAULT 0,
+            bandwidth_cycle_reset_at DATETIME,
+            is_suspended INTEGER NOT NULL DEFAULT 0,
+            is_suspicious INTEGER NOT NULL DEFAULT 0,
+            suspicious_reason TEXT,
+            email_verified INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        // Migrate existing installations that predate email verification, quota, & bandwidth limits.
+        await ensureColumn('users', 'email_verified', 'INTEGER NOT NULL DEFAULT 0');
+        await ensureColumn('users', 'storage_overage_since', 'DATETIME');
+        await ensureColumn('users', 'monthly_bandwidth_limit_bytes', 'INTEGER NOT NULL DEFAULT 16106127360');
+        await ensureColumn('users', 'used_bandwidth_bytes', 'INTEGER NOT NULL DEFAULT 0');
+        await ensureColumn('users', 'monthly_api_requests_limit', 'INTEGER NOT NULL DEFAULT 100000');
+        await ensureColumn('users', 'used_api_requests', 'INTEGER NOT NULL DEFAULT 0');
+        await ensureColumn('users', 'bandwidth_cycle_reset_at', 'DATETIME');
+        await ensureColumn('users', 'suspension_reason', 'TEXT');
+        await ensureColumn('users', 'suspended_at', 'DATETIME');
+        await ensureColumn('users', 'requires_otp_verification', 'INTEGER NOT NULL DEFAULT 0');
+        await ensureColumn('users', 'otp_code', 'TEXT');
+        await ensureColumn('users', 'otp_expires_at', 'DATETIME');
+        await ensureColumn('users', 'otp_sent_at', 'DATETIME');
+        await ensureColumn('users', 'otp_reason', 'TEXT');
+        await runQuery(`UPDATE users SET bandwidth_cycle_reset_at = datetime('now', '+30 days') WHERE bandwidth_cycle_reset_at IS NULL;`);
+        await runQuery(`UPDATE users SET email_verified = 1 WHERE role = 'admin' AND email_verified = 0;`);
+
+        // Account Email Verification Tokens
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS account_email_verifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Sessions table
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS sessions (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            ip_v4 TEXT,
+            ip_v6 TEXT,
+            user_agent TEXT,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // IP History table
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS ip_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            ip_v4 TEXT,
+            ip_v6 TEXT,
+            action TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Login History table
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS login_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            ip_v4 TEXT,
+            ip_v6 TEXT,
+            user_agent TEXT,
+            status TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Share Links table
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS share_links (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            file_path TEXT NOT NULL,
+            is_directory INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            expires_at DATETIME,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            view_count INTEGER NOT NULL DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Password Reset Tokens
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at DATETIME NOT NULL,
+            used INTEGER NOT NULL DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Email Verifications
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS email_verifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            new_email TEXT NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            expires_at DATETIME NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // SMTP Config
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS smtp_config (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            host TEXT,
+            port INTEGER DEFAULT 587,
+            username TEXT,
+            password TEXT,
+            encryption TEXT DEFAULT 'STARTTLS',
+            from_email TEXT,
+            from_name TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        // App Settings table
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS app_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+          );
+        `);
+
+        // Email Templates
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS email_templates (
+            slug TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            body_html TEXT NOT NULL
+          );
+        `);
+
+        // Background URL download jobs
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS download_jobs (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            url TEXT NOT NULL,
+            target_path TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'queued',
+            progress INTEGER NOT NULL DEFAULT 0,
+            bytes INTEGER NOT NULL DEFAULT 0,
+            total_bytes INTEGER NOT NULL DEFAULT 0,
+            speed_bytes_per_sec INTEGER NOT NULL DEFAULT 0,
+            eta_seconds INTEGER NOT NULL DEFAULT 0,
+            error TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Progress metrics for background downloads (safe migration for existing databases).
+        await ensureColumn('download_jobs', 'speed_bytes_per_sec', 'INTEGER NOT NULL DEFAULT 0');
+        await ensureColumn('download_jobs', 'eta_seconds', 'INTEGER NOT NULL DEFAULT 0');
+
+        // Audit Logs
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            action TEXT NOT NULL,
+            details TEXT,
+            ip_address TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        // Atomic one-IP-per-account registration locks. This table is only
+        // populated for registrations made while Anti Multi-Account Protection
+        // is enabled, so disabling the feature never blocks registration.
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS registration_ip_locks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            ip_address TEXT NOT NULL UNIQUE,
+            ip_version INTEGER NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // URL/share/download monitoring metadata. It intentionally stores only
+        // metadata, never file contents, so downloads remain streaming.
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS download_monitor_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            username TEXT,
+            ip_address TEXT,
+            requested_url TEXT,
+            endpoint TEXT,
+            file_name TEXT,
+            file_path TEXT,
+            file_id TEXT,
+            file_size_bytes INTEGER,
+            status TEXT NOT NULL DEFAULT 'started',
+            http_status INTEGER,
+            user_agent TEXT,
+            started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            completed_at DATETIME,
+            error TEXT
+          );
+        `);
+
+        // API Keys table for S3 Cluster & Blob API access
+        await runQuery(`
+          CREATE TABLE IF NOT EXISTS api_keys (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            key_id TEXT UNIQUE NOT NULL,
+            secret_key TEXT NOT NULL,
+            permissions TEXT NOT NULL DEFAULT 'read,write,delete',
+            rate_limit INTEGER NOT NULL DEFAULT 3600,
+            total_requests INTEGER NOT NULL DEFAULT 0,
+            last_used_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+        `);
+
+        // Indexes used by registration protection and admin pagination.
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_registration_ip_locks_ip ON registration_ip_locks(ip_address);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_ip_history_timestamp ON ip_history(timestamp DESC);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp DESC);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_download_monitor_started ON download_monitor_logs(started_at DESC);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_download_monitor_user ON download_monitor_logs(user_id, started_at DESC);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_api_keys_key_id ON api_keys(key_id);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_api_keys_secret ON api_keys(secret_key);`);
+        await runQuery(`CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);`);
+
+        // Seed default app settings if missing
+        const defaultSettings = [
+          ['anti_multi_account_enabled', 'true'],
+          ['default_storage_quota_bytes', '10737418240'],
+          ['default_monthly_bandwidth_bytes', '16106127360'],
+          ['default_monthly_api_requests', '100000'],
+          ['max_share_links_per_user', '3'],
+          ['app_name', 'ZenStorage'],
+          ['app_url', 'http://storage.zendevelopment.in'],
+          ['website_title', 'ZenStorage'],
+          ['website_icon_url', ''],
+          ['session_timeout_hours', '24'],
+          ['discord_enabled', 'false'],
+          ['discord_join_url', ''],
+          ['contact_email_enabled', 'false'],
+          ['contact_email', '']
+        ];
+
+        for (const [key, val] of defaultSettings) {
+          await runQuery(`INSERT OR IGNORE INTO app_settings (key, value) VALUES (?, ?);`, [key, val]);
+        }
+
+        // Seed default email templates if missing
+        const templates = [
+  [
+    'welcome',
+    'Welcome Email',
+    'Welcome to {{app_name}}!',
+    `
+    <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+        <!-- Header -->
+        <div style="background:#1f1f1f;padding:30px 25px;">
+          <div style="font-size:24px;font-weight:700;line-height:1.2;">
+            <span style="color:#2563eb;">Zen</span><span style="color:#ffffff;">Development</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding:30px 25px;">
+
+          <h1 style="margin:0 0 24px 0;font-size:28px;line-height:1.25;color:#111827;font-weight:700;">
+            Welcome to<br>
+            {{app_name}}
+          </h1>
+
+          <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Hello {{name}},
+          </p>
+
+          <p style="margin:0 0 22px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Your account has been successfully created on {{app_name}}.
+            We are excited to welcome you to our hosting platform.
+          </p>
+
+          <!-- Account Information -->
+          <div style="background:#f8fafc;border-left:3px solid #2563eb;padding:18px 16px;margin:0 0 22px 0;">
+            <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:14px;">
+              Account Information
+            </div>
+
+            <div style="font-size:12px;line-height:1.8;color:#374151;">
+              <div>
+                Username:
+                <strong style="color:#111827;">{{username}}</strong>
+              </div>
+
+              <div>
+                Your {{app_name}} account is now ready to use.
+              </div>
+            </div>
+          </div>
+
+          <p style="margin:0 0 24px 0;font-size:13px;line-height:1.7;color:#374151;">
+            You can now access your hosting dashboard, deploy servers and
+            manage your services from your control panel.
+          </p>
+
+          <!-- Button -->
+          <div style="margin:0 0 24px 0;">
+            <a href="#"
+               style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;
+               font-size:12px;font-weight:700;padding:10px 18px;">
+              Open Control Panel
+            </a>
+          </div>
+
+          <p style="margin:0 0 16px 0;font-size:12px;line-height:1.7;color:#374151;">
+            Thank you for choosing {{app_name}} for your hosting needs.
+            We look forward to powering your next project.
+          </p>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+          <p style="margin:0 0 8px 0;font-size:10px;line-height:1.6;color:#6b7280;">
+            © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+          </p>
+
+          <p style="margin:0;font-size:10px;line-height:1.6;">
+            <a href="#" style="color:#2563eb;text-decoration:none;">
+              Your hosting platform
+            </a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+    `
+  ],
+
+  [
+    'verify_email',
+    'Verify Email Address',
+    'Verify your email for {{app_name}}',
+    `
+    <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+        <!-- Header -->
+        <div style="background:#1f1f1f;padding:30px 25px;">
+          <div style="font-size:24px;font-weight:700;line-height:1.2;">
+            <span style="color:#2563eb;">Zen</span><span style="color:#ffffff;">Development</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding:30px 25px;">
+
+          <h1 style="margin:0 0 22px 0;font-size:28px;line-height:1.25;color:#111827;">
+            Verify your<br>
+            email address
+          </h1>
+
+          <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Hello {{name}},
+          </p>
+
+          <p style="margin:0 0 24px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Thanks for creating your {{app_name}} account.
+            Please verify your email address to finish setting up your account.
+          </p>
+
+          <div style="margin:0 0 24px 0;">
+            <a href="{{verify_url}}"
+               style="display:inline-block;background:#2563eb;color:#ffffff;
+               padding:11px 20px;text-decoration:none;font-size:12px;font-weight:700;">
+              Verify My Email
+            </a>
+          </div>
+
+          <div style="background:#f8fafc;border-left:3px solid #2563eb;padding:16px;">
+            <p style="margin:0;font-size:12px;line-height:1.7;color:#374151;">
+              If you did not create this account, you can safely ignore this email.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+          <p style="margin:0;font-size:10px;line-height:1.6;color:#6b7280;">
+            © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+    `
+  ],
+
+  [
+    'password_reset',
+    'Password Reset Requested',
+    'Reset your {{app_name}} Password',
+    `
+    <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+        <!-- Header -->
+        <div style="background:#1f1f1f;padding:30px 25px;">
+          <div style="font-size:24px;font-weight:700;">
+            <span style="color:#2563eb;">Zen</span><span style="color:#ffffff;">Development</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding:30px 25px;">
+
+          <h1 style="margin:0 0 22px 0;font-size:28px;line-height:1.25;color:#111827;">
+            Password Reset<br>
+            Request
+          </h1>
+
+          <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Hello {{name}},
+          </p>
+
+          <p style="margin:0 0 24px 0;font-size:13px;line-height:1.7;color:#374151;">
+            We received a request to reset your {{app_name}} password.
+            Click the button below to create a new password.
+          </p>
+
+          <div style="margin:0 0 24px 0;">
+            <a href="{{reset_url}}"
+               style="display:inline-block;background:#2563eb;color:#ffffff;
+               padding:11px 20px;text-decoration:none;font-size:12px;font-weight:700;">
+              Reset Password
+            </a>
+          </div>
+
+          <div style="background:#f8fafc;border-left:3px solid #2563eb;padding:16px;">
+            <p style="margin:0;font-size:12px;line-height:1.7;color:#374151;">
+              This password-reset link is valid for 1 hour.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+          <p style="margin:0;font-size:10px;line-height:1.6;color:#6b7280;">
+            © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+    `
+  ],
+
+  [
+    'email_change',
+    'Email Address Verification',
+    'Verify your new email address',
+    `
+    <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+        <!-- Header -->
+        <div style="background:#1f1f1f;padding:30px 25px;">
+          <div style="font-size:24px;font-weight:700;">
+            <span style="color:#2563eb;">Zen</span><span style="color:#ffffff;">Development</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding:30px 25px;">
+
+          <h1 style="margin:0 0 22px 0;font-size:28px;line-height:1.25;color:#111827;">
+            Verify your new<br>
+            email address
+          </h1>
+
+          <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Hello {{name}},
+          </p>
+
+          <p style="margin:0 0 24px 0;font-size:13px;line-height:1.7;color:#374151;">
+            You requested to change the email address associated with
+            your {{app_name}} account.
+          </p>
+
+          <div style="margin:0 0 24px 0;">
+            <a href="{{verify_url}}"
+               style="display:inline-block;background:#2563eb;color:#ffffff;
+               padding:11px 20px;text-decoration:none;font-size:12px;font-weight:700;">
+              Verify Email
+            </a>
+          </div>
+
+          <div style="background:#f8fafc;border-left:3px solid #2563eb;padding:16px;">
+            <p style="margin:0;font-size:12px;line-height:1.7;color:#374151;">
+              If you did not request this change, please secure your account immediately.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+          <p style="margin:0;font-size:10px;line-height:1.6;color:#6b7280;">
+            © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+    `
+  ],
+
+  [
+    'new_ip_login',
+    'New Login Detected',
+    'Security Alert: New login to {{app_name}}',
+    `
+    <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+        <!-- Header -->
+        <div style="background:#1f1f1f;padding:30px 25px;">
+          <div style="font-size:24px;font-weight:700;">
+            <span style="color:#2563eb;">Zen</span><span style="color:#ffffff;">Development</span>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div style="padding:30px 25px;">
+
+          <h1 style="margin:0 0 22px 0;font-size:28px;line-height:1.25;color:#111827;">
+            New Login<br>
+            Detected
+          </h1>
+
+          <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+            Hello {{name}},
+          </p>
+
+          <p style="margin:0 0 22px 0;font-size:13px;line-height:1.7;color:#374151;">
+            A new login to your {{app_name}} account was detected from
+            an unrecognized IP address.
+          </p>
+
+          <!-- Login Information -->
+          <div style="background:#f8fafc;border-left:3px solid #2563eb;padding:18px 16px;margin-bottom:22px;">
+            <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:14px;">
+              Login Information
+            </div>
+
+            <div style="font-size:12px;line-height:2;color:#374151;">
+              <div>
+                <strong>Time:</strong> {{time}}
+              </div>
+
+              <div>
+                <strong>IPv4:</strong> {{ip_v4}}
+              </div>
+
+              <div>
+                <strong>IPv6:</strong> {{ip_v6}}
+              </div>
+
+              <div>
+                <strong>Device:</strong> {{user_agent}}
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#fff7ed;border-left:3px solid #f59e0b;padding:16px;margin-bottom:22px;">
+            <p style="margin:0;font-size:12px;line-height:1.7;color:#374151;">
+              If this was not you, please reset your password immediately
+              and secure your account.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+          <p style="margin:0;font-size:10px;line-height:1.6;color:#6b7280;">
+            © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+    `
+    ],
+
+    [
+      'user_suspended',
+      'Account Suspended Notification',
+      'Important: Your {{app_name}} account has been suspended',
+      `
+      <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+        <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+          <!-- Header -->
+          <div style="background:#1f1f1f;padding:30px 25px;">
+            <div style="font-size:24px;font-weight:700;">
+              <span style="color:#ef4444;">Zen</span><span style="color:#ffffff;">Storage</span>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div style="padding:30px 25px;">
+
+            <h1 style="margin:0 0 20px 0;font-size:26px;line-height:1.25;color:#b91c1c;font-weight:700;">
+              Account Suspended
+            </h1>
+
+            <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+              Hello <strong>{{name}}</strong> (<em>{{username}}</em>),
+            </p>
+
+            <p style="margin:0 0 20px 0;font-size:13px;line-height:1.7;color:#374151;">
+              Your account on <strong>{{app_name}}</strong> has been suspended by an administrator.
+              While suspended, your access to SFTP, storage management, API clusters, and file sharing is restricted.
+            </p>
+
+            <!-- Suspension Reason Box -->
+            <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:18px 16px;margin:0 0 22px 0;">
+              <div style="font-size:14px;font-weight:700;color:#991b1b;margin-bottom:8px;">
+                Reason for Suspension:
+              </div>
+              <div style="font-size:13px;line-height:1.7;color:#1f2937;background:#ffffff;padding:10px 14px;border:1px solid #fee2e2;border-radius:4px;">
+                {{reason}}
+              </div>
+              <div style="font-size:11px;color:#6b7280;margin-top:10px;">
+                Suspension Date: <strong>{{suspended_at}}</strong>
+              </div>
+            </div>
+
+            <p style="margin:0 0 16px 0;font-size:12px;line-height:1.7;color:#4b5563;">
+              If you believe this suspension was made in error or would like to request account review, please contact our support team.
+            </p>
+
+          </div>
+
+          <!-- Footer -->
+          <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+            <p style="margin:0 0 4px 0;font-size:10px;line-height:1.6;color:#6b7280;">
+              © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+            </p>
+            <p style="margin:0;font-size:10px;line-height:1.6;color:#9ca3af;">
+              This is an automated notification regarding your account status.
+            </p>
+          </div>
+
+        </div>
+      </div>
+      `
+    ],
+
+    [
+      'user_unsuspended',
+      'Account Reactivated Notification',
+      'Good news: Your {{app_name}} account has been reactivated',
+      `
+      <div style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+        <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+
+          <!-- Header -->
+          <div style="background:#1f1f1f;padding:30px 25px;">
+            <div style="font-size:24px;font-weight:700;">
+              <span style="color:#10b981;">Zen</span><span style="color:#ffffff;">Storage</span>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div style="padding:30px 25px;">
+
+            <h1 style="margin:0 0 20px 0;font-size:26px;line-height:1.25;color:#047857;font-weight:700;">
+              Account Reactivated
+            </h1>
+
+            <p style="margin:0 0 16px 0;font-size:13px;line-height:1.7;color:#374151;">
+              Hello <strong>{{name}}</strong> (<em>{{username}}</em>),
+            </p>
+
+            <p style="margin:0 0 20px 0;font-size:13px;line-height:1.7;color:#374151;">
+              Great news! Your account on <strong>{{app_name}}</strong> has been unsuspended and fully reactivated.
+              You now have full access to your cloud storage, SFTP, and API services again.
+            </p>
+
+            <!-- Reactivation Note Box -->
+            <div style="background:#f0fdf4;border-left:4px solid #10b981;padding:18px 16px;margin:0 0 22px 0;">
+              <div style="font-size:14px;font-weight:700;color:#065f46;margin-bottom:8px;">
+                Reactivation Details:
+              </div>
+              <div style="font-size:13px;line-height:1.7;color:#1f2937;background:#ffffff;padding:10px 14px;border:1px solid #dcfce7;border-radius:4px;">
+                {{reason}}
+              </div>
+              <div style="font-size:11px;color:#6b7280;margin-top:10px;">
+                Reactivated Date: <strong>{{reactivated_at}}</strong>
+              </div>
+            </div>
+
+            <!-- Login CTA Button -->
+            <div style="margin:0 0 24px 0;">
+              <a href="{{login_url}}"
+                 style="display:inline-block;background:#10b981;color:#ffffff;text-decoration:none;
+                 font-size:13px;font-weight:700;padding:12px 22px;border-radius:6px;">
+                Log In to Your Account
+              </a>
+            </div>
+
+            <p style="margin:0 0 16px 0;font-size:12px;line-height:1.7;color:#4b5563;">
+              Thank you for being part of {{app_name}}. If you need any assistance, feel free to reach out to our team.
+            </p>
+
+          </div>
+
+          <!-- Footer -->
+          <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:18px 25px;">
+            <p style="margin:0 0 4px 0;font-size:10px;line-height:1.6;color:#6b7280;">
+              © ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+            </p>
+          </div>
+
+        </div>
+      </div>
+      `
+    ],
+
+    [
+      'otp_security_verification',
+      'Security OTP Verification Code',
+      'Your {{app_name}} verification code is {{otp_code}}',
+      `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>Account Security Verification</title>
+  <style>
+    /* --- Progressive enhancement (safely ignored if <style> is stripped) --- */
+    @media (max-width:480px) {
+      .zc-pad   { padding-left:20px !important; padding-right:20px !important; }
+      .zc-otp   { font-size:30px !important; letter-spacing:0.22em !important; padding-left:0.22em !important; }
+      .zc-h1    { font-size:20px !important; }
+      .zc-codebox { padding:18px 10px !important; }
+    }
+    /* Stop iOS / Gmail from turning the code into a phone link */
+    a[x-apple-data-detectors], .zc-otp a {
+      color:inherit !important; text-decoration:none !important; font-size:inherit !important;
+      font-family:inherit !important; font-weight:inherit !important; line-height:inherit !important;
+    }
+  </style>
+</head>
+
+<body style="margin:0;padding:0;background:#000000;">
+
+  <!-- ============ PREHEADER (inbox preview text) ============ -->
+  <div style="display:none;font-size:1px;color:#000000;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+    Your {{app_name}} verification code is {{otp_code}} — it expires in 24 hours.
+    &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
+  </div>
+
+  <!-- ============ WRAPPER ============ -->
+  <div style="margin:0;padding:0;background:#000000;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#f4f4f5;-webkit-font-smoothing:antialiased;">
+
+    <div style="max-width:540px;margin:28px auto;background:#0b0b0e;border:1px solid #1f1f26;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -20px rgba(0,0,0,0.9);">
+
+      <!-- Accent bar (solid fallback → gradient enhancement) -->
+      <div style="height:4px;background:#f59e0b;background:linear-gradient(90deg,#f59e0b 0%,#fbbf24 50%,#f59e0b 100%);font-size:0;line-height:0;">&nbsp;</div>
+
+      <!-- ============ HEADER ============ -->
+      <div class="zc-pad" style="background:#111116;padding:22px 30px;border-bottom:1px solid #1f1f26;text-align:center;">
+        <div style="font-size:21px;font-weight:800;letter-spacing:-0.5px;color:#ffffff;line-height:1.2;">
+          {{app_name}}
+          <span style="display:inline-block;vertical-align:middle;font-size:10px;padding:3px 9px;border-radius:999px;background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-left:6px;">Security</span>
+        </div>
+      </div>
+
+      <!-- ============ BODY ============ -->
+      <div class="zc-pad" style="padding:36px 32px 32px 32px;text-align:center;">
+
+        <!-- Lock badge -->
+        <div style="width:56px;height:56px;line-height:56px;margin:0 auto 22px auto;border-radius:50%;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.32);font-size:23px;text-align:center;">&#128274;</div>
+
+        <!-- Headline -->
+        <h1 class="zc-h1" style="margin:0 0 10px 0;font-size:23px;line-height:1.3;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">
+          Account Security Verification
+        </h1>
+
+        <p style="margin:0 0 24px 0;font-size:14px;line-height:1.65;color:#a1a1aa;">
+          Hello <strong style="color:#e4e4e7;font-weight:600;">{{name}}</strong>, your account has been placed under a security review and needs to be verified.
+        </p>
+
+        <!-- Reason callout -->
+        <div style="background:#16161c;border-left:3px solid #f59e0b;padding:14px 18px;text-align:left;margin:0 0 28px 0;border-radius:0 10px 10px 0;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;color:#fbbf24;">Reason for review</div>
+          <div style="font-size:13px;line-height:1.55;color:#e4e4e7;margin-top:5px;">{{reason}}</div>
+        </div>
+
+        <!-- OTP label -->
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;color:#8b8b95;margin:0 0 12px 0;">
+          Your 4-digit verification code
+        </div>
+
+        <!-- OTP code -->
+        <div class="zc-codebox" style="background:#000000;border:1px solid rgba(255,255,255,0.16);border-radius:14px;padding:22px 16px;margin:0 auto 16px auto;max-width:330px;box-shadow:inset 0 0 40px rgba(255,255,255,0.04);">
+          <div class="zc-otp" style="font-family:'SF Mono',ui-monospace,'Roboto Mono',Menlo,Consolas,monospace;font-size:38px;font-weight:700;color:#ffffff;letter-spacing:0.28em;padding-left:0.28em;line-height:1;white-space:nowrap;text-shadow:0 0 24px rgba(255,255,255,0.45);">{{otp_code}}</div>
+        </div>
+
+        <!-- Expiry pill -->
+        <div style="display:inline-block;font-size:12px;font-weight:600;color:#d4d4d8;background:#16161c;border:1px solid #26262e;border-radius:999px;padding:7px 16px;margin:0 0 26px 0;">
+          &#9201; Expires in 24 hours
+        </div>
+
+        <!-- Divider -->
+        <div style="height:1px;background:#1f1f26;font-size:0;line-height:0;margin:0 0 24px 0;">&nbsp;</div>
+
+        <!-- Security tip -->
+        <div style="background:#101014;border:1px solid #1f1f26;border-radius:12px;padding:16px 18px;text-align:left;">
+          <div style="font-size:12px;font-weight:700;color:#fbbf24;margin-bottom:6px;">&#128737;&#65039; Keep your account safe</div>
+          <div style="font-size:12px;line-height:1.65;color:#8b8b95;">
+            {{app_name}} will <strong style="color:#d4d4d8;font-weight:600;">never</strong> ask you for this code by phone, chat, or email. Don't share it with anyone.
+            If you didn't request this verification, contact your administrator immediately.
+          </div>
+        </div>
+
+        <p style="margin:24px 0 0 0;font-size:12px;line-height:1.6;color:#71717a;">
+          Having trouble? Reply to this email or reach out to your workspace administrator.
+        </p>
+
+      </div>
+
+      <!-- ============ FOOTER ============ -->
+      <div class="zc-pad" style="background:#111116;border-top:1px solid #1f1f26;padding:18px 30px;text-align:center;">
+        <p style="margin:0 0 6px 0;font-size:11px;line-height:1.5;color:#71717a;">
+          This is an automated security message — please do not reply directly.
+        </p>
+        <p style="margin:0;font-size:11px;color:#52525b;">
+          &copy; ${new Date().getFullYear()} {{app_name}}. All rights reserved.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
+      `
+    ]
+        ];
+
+        for (const [slug, name, subject, body_html] of templates) {
+          await runQuery(
+           `
+           INSERT INTO email_templates (slug, name, subject, body_html)
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(slug) DO UPDATE SET
+           name = excluded.name,
+           subject = excluded.subject,
+           body_html = excluded.body_html;
+           `,
+            [slug, name, subject, body_html]
+           );
+        }
+
+        // Seed default Admin Account if no 'admin' user exists. Wait for the INSERT to finish
+        // before resolving database initialization so startup cannot race app_settings reads.
+        db.get(`SELECT id FROM users WHERE username = 'admin';`, async (err, row) => {
+          if (err) return reject(err);
+
+          const finish = (seedErr = null) => {
+            if (seedErr) return reject(seedErr);
+            // Final queue barrier: everything enqueued before this callback is complete.
+            db.run('SELECT 1;', barrierErr => {
+              if (barrierErr) return reject(barrierErr);
+              resolve();
+            });
+          };
+
+          if (!row) {
+            try {
+              const hash = await bcrypt.hash('Admin@123456', 10);
+              db.run(
+                `INSERT INTO users (name, username, email, password_hash, role, storage_quota_bytes, email_verified) VALUES (?, ?, ?, ?, ?, ?, 1);`,
+                ['System Admin', 'admin', 'admin@vpsmanager.local', hash, 'admin', 107374182400],
+                insertErr => {
+                  if (!insertErr) console.log('Default Admin user ensured: username: "admin", password: "Admin@123456"');
+                  finish(insertErr);
+                }
+              );
+            } catch (e) {
+              reject(e);
+            }
+          } else {
+            finish();
+          }
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+module.exports = {
+  db,
+  runQuery,
+  getRow,
+  getAll,
+  initDatabase
+};
